@@ -7,36 +7,32 @@ import datetime
 import MySQLdb as mariadb 
 import time
 
-conn = mariadb.connect(user="root", passwd="", db="mlb", charset="utf8")
+conn = mariadb.connect(user="root", passwd="1111", db="mlb", charset="utf8")
 cursor = conn.cursor()
 
-def InsertDB(InsertValue):
-	placeholder = ",".join(["%s"] * len(InsertValue))
-	columns = ",".join(InsertValue.keys())
-	sql = "insert into %s (%s) values (%s)" % ("MLB_2018_Game", columns, placeholder)
-	cursor.execute(sql, InsertValue.values())
+def UpdateDB(InsertValue):
+	print(InsertValue)
+	sql = "update MLB_2018_Game set HomeScore = %s, AwayScore = %s where HomeTeam = %s and AwayTeam = %s and Date = %s"
+	cursor.execute(sql, InsertValue)
 	conn.commit()
-	print("Insert successfully!")
+	print("Updated successfully!")
 
-mon = ["02", "03", "04", "05", "06", "07", "08", "09", "10"]
-day = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12",
-       "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
-       "25", "26", "27", "28", "29", "30", "31"]
-     
-'''
-mon = ["02"]
-day = ["21", "22", "23", "24",
-       "25", "26", "27", "28", "29", "30", "31"]
-'''
-header = {
-	"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36"
-	}
+if __name__=='__main__':
+	mon_day = []
+	for d in range(0, 3):
+		mon_day.append([
+			str(datetime.datetime.now() - datetime.timedelta(days=d))[5:7], 
+			str(datetime.datetime.now() - datetime.timedelta(days=d))[8:10]]
+			)
 
-for k in range(len(mon)):
-	for j in range(len(day)):
-		url = "https://gd.mlb.com/components/game/mlb/year_2018/month_" + mon[k] + "/day_" + day[j] + "/master_scoreboard.json"
+	header = {
+		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36"
+		}
+
+	for j in range(len(mon_day)):
+		url = "https://gd.mlb.com/components/game/mlb/year_2018/month_" + mon_day[j][0] + "/day_" + mon_day[j][1] + "/master_scoreboard.json"
 		#url = "https://gd.mlb.com/components/game/mlb/year_2018/month_07/day_22/master_scoreboard.json"
-		print("Date:", mon[k]+"/"+day[j])
+		print("Date:", mon_day[j][0], mon_day[j][1])
 		try:
 			request = ur.Request(url, headers = header)
 			_json = ur.urlopen(request).read()
@@ -58,17 +54,14 @@ for k in range(len(mon)):
 							score[l]["away"] = 0
 						homeScore = homeScore + int(score[l]["home"])
 						awayScore = awayScore + int(score[l]["away"]) # 累積每局的比分
-					#print("home", homeScore, "away", awayScore)
-				InsertValue = {"HomeTeam": data[i]["home_team_name"], 
-							   "HomeLoca": data[i]["home_team_city"], 
-			    	           "AwayTeam": data[i]["away_team_name"], 
-			    	           "AwayLoca": data[i]["away_team_city"], 
-			        	       "Date": datetime.datetime.strptime(data[i]["time_date"], "%Y/%m/%d %H:%M") + datetime.timedelta(days=1), #Json的日期比台灣時間少一天
-			        	       "Venue": data[i]["venue"], 
-			        	       "HomeScore": str(homeScore), 
-			        	       "AwayScore": str(awayScore)}
+				InsertValue = [str(homeScore), 
+			        	       str(awayScore),
+							   data[i]["home_team_name"], 
+							   data[i]["away_team_name"], 
+			        	       datetime.datetime.strptime(data[i]["time_date"], "%Y/%m/%d %H:%M") + datetime.timedelta(days=1) #Json的日期比台灣時間少一天
+			        	       ]
 				#print(InsertValue)
-				InsertDB(InsertValue)
+				UpdateDB(InsertValue)
 		except KeyError as err:
 			print("No game!")
 		except HTTPError as err:
@@ -76,8 +69,7 @@ for k in range(len(mon)):
 		except URLError as err:
 			print("URLError")
 
-		time.sleep(1)
-
+	time.sleep(1)
 
 
 
