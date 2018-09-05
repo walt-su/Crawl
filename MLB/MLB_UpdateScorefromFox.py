@@ -19,7 +19,7 @@ def UpdateDB(InsertValue):
 
 if __name__=='__main__':
 	mon_day = []
-	for d in range(0, 3):
+	for d in range(0, 7):
 		mon_day.append([
 			str(datetime.datetime.now() - datetime.timedelta(days=d))[5:7], 
 			str(datetime.datetime.now() - datetime.timedelta(days=d))[8:10]]
@@ -65,7 +65,7 @@ if __name__=='__main__':
 		except KeyError as err:
 			print("No game!")
 		except HTTPError as err:
-			print("HTTPError")
+			print("HTTPError:", err.code)
 		except URLError as err:
 			print("URLError")
 

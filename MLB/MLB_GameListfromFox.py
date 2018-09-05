@@ -4,12 +4,15 @@ from urllib.error import URLError, HTTPError
 import json
 from pprint import pprint
 import datetime
-import MySQLdb as mariadb 
+#import mysqlclient as mariadb 
 import time
+import sys
 
-conn = mariadb.connect(user="root", passwd="1111", db="mlb", charset="utf8")
-cursor = conn.cursor()
+#conn = mariadb.connect(user="root", passwd="1111", db="mlb", charset="utf8")
+#cursor = conn.cursor()
 
+
+print(sys.version)
 def InsertDB(InsertValue):
 	placeholder = ",".join(["%s"] * len(InsertValue))
 	columns = ",".join(InsertValue.keys())
@@ -21,9 +24,9 @@ def InsertDB(InsertValue):
 if __name__=='__main__':
 	mon = ["02", "03", "04", "05", "06", "07", "08", "09", "10"]
 	day = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12",
-	       "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
-	       "25", "26", "27", "28", "29", "30", "31"]
-	     
+			"13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
+			"25", "26", "27", "28", "29", "30", "31"]
+	
 	header = {
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36"
 		}
@@ -34,11 +37,14 @@ if __name__=='__main__':
 			#url = "https://gd.mlb.com/components/game/mlb/year_2018/month_07/day_22/master_scoreboard.json"
 			print("Date:", mon[k]+"/"+day[j])
 			try:
+				#print("test 1", url)
 				request = ur.Request(url, headers = header)
+				#print("test 2", request)
 				_json = ur.urlopen(request).read()
+				#print("test 3", _json)
 				load_json = json.loads(_json)
 				data = load_json["data"]["games"]["game"]
-				#pprint(data)
+				pprint(data)
 				for i in range(len(data)):
 					homeScore = 0
 					awayScore = 0
@@ -67,9 +73,9 @@ if __name__=='__main__':
 			except KeyError as err:
 				print("No game!")
 			except HTTPError as err:
-				print("HTTPError")
-			except URLError as err:
-				print("URLError")
+				print("HTTPError:", err.code)
+			#except URLError as err:
+			#	print("URLError")
 
 			time.sleep(1)
 
