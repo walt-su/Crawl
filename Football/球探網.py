@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import requests
-from selenium import webdriver
-import re
 from datetime import datetime
 import time
+import requests
+import re
+from selenium import webdriver
 import MySQLdb as mariadb 
 
 ##### Insert DB
@@ -41,10 +41,17 @@ def crawl_game_data(url):
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36"
     }
 
-    print("Url:", url)    
-    response = requests.get(url, headers=headers)
-    stat = response.status_code
-   
+    while True:
+        try:
+            print("Url:", url)    
+            response = requests.get(url, headers=headers)
+            stat = response.status_code
+        except:
+            pass
+            time.sleep(3)
+            print("Re-crawl")
+        else:
+            break
     team_name = {}
     games = []
     re_1 = re.compile("\"([\w]+)\"")                                          # 用來取得周次 -> "R_1"
@@ -95,9 +102,9 @@ def crawl_odds_kelly(Euro_url):
     for i in Euro_url:  
         try :
             web.get(i)
-            time.sleep(3)
+            time.sleep(4)
             web.find_element_by_xpath('//*[@id="sel_showType"]/option[2]').click()        #指定初盤
-            time.sleep(3)
+            time.sleep(4)
             Temp = re.split(' ',web.find_element_by_xpath('//tr[@id="oddstr_281"]').text) # Bet365 id 代碼是 oddstr_281
             Company.append((Temp[0]+Temp[1][0:3]).encode('utf-8')) 
             H_Rate.append(Temp[2].encode('utf-8'))
@@ -133,79 +140,79 @@ if __name__ == '__main__':
     cursor = conn.cursor()
     _date = datetime.now()
     version = str(_date.year) + str(format(_date.month, "02d")) + str(format(_date.day, "02d")) + str(format(_date.hour, "02d"))
-    url = ["http://zq.win007.com/jsData/matchResult/2017-2018/s31.js?version="+version
-          #,"http://zq.win007.com/jsData/matchResult/2017-2018/s31.js?version="+version
+    url = ["http://zq.win007.com/jsData/matchResult/2015-2016/s36.js?version="+version
+          ,"http://zq.win007.com/jsData/matchResult/2015-2016/s31.js?version="+version
           #"http://zq.win007.com/jsData/matchResult/2017-2018/s8.js?version=" +version
           #"http://zq.win007.com/jsData/matchResult/2017-2018/s34.js?version="+version
           #"http://zq.win007.com/jsData/matchResult/2017-2018/s11.js?version="+version
           ]
-    
+    OverAll_time = datetime.now()
     for u in url:
-        url_time = datetime.now()
         # 1) Get basic game data
-        games = crawl_game_data(u)                                 
-        print("Step1: Finish getting basic game data.")
+        games = crawl_game_data(u)
+        print("Step1: Basic game data OK.")
     
         # 2) Get odds & kelly data
-        start = 200
-        end = 300
-        games = games[start:end]
-        print("Crawled games: ", start, ":", end)                    # 設定抓取的賽次範圍, 避免被封鎖一次抓不完
+        game_index = [[0, 70], [70, 140], [140, 210], [210, 290], [290, len(games)]]  # 設定抓取的賽次範圍, 避免被封鎖一次抓不完
+        for l in game_index:
+            EachRound_time = datetime.now()
+            games_temp = games[l[0]:l[1]]
+            print("Step2: Crawled games from ", l[0], "to", l[1])                    
 
-        link_euro = []                                  
-        for game in games:
-            link_euro.append(game[23])                               # Game data 共有27個欄位, Link 在第24個
-        Company,H_Rate,D_Rate,A_Rate,H_WinRate,D_WinRate,A_WinRate,ReturnRate,H_Kelly,D_Kelly,A_Kelly = crawl_odds_kelly(link_euro)
-        print("Step2: Finish getting odds & kelly data already.")
-        
-        # 3) Insert to DB
-        for i in range(len(games)):                                  
-            Value = {'Type':CheckType(u),
-                     'Datetime':datetime.strptime(games[i][3],'%Y-%m-%d %H:%M'),
-                     'HomeTeam':games[i][4],
-                     'AwayTeam':games[i][5],
-                     'Score':games[i][6],
-                     'Score_h':games[i][7],
-                     'HomeRank':games[i][8],
-                     'AwayRank':games[i][9],             
-                     'Handicap_a':games[i][10],
-                     'Handicap_h':games[i][11],
-                     'Score_sum_a':games[i][12],
-                     'Score_sum_h':games[i][13],
-                     'EuroIndex':games[i][15],
-                     'HomeRed':games[i][18],
-                     'AwayRed':games[i][19],
-                     'Unknown':games[i][20],
-                     'EuroURL':games[i][23],
-                     'GameRound':games[i][24],
-                     'HomeName':games[i][25],
-                     'AwayName':games[i][26],
-                     # odds & kelly
-                     'Company':Company[i],
-                     'HRate':H_Rate[i],
-                     'DRate':D_Rate[i],
-                     'ARate':A_Rate[i],
-                     'HWinRate':H_WinRate[i],
-                     'DWinRate':D_WinRate[i],
-                     'AWinRate':A_WinRate[i],
-                     'ReturnRate':ReturnRate[i],
-                     'HKelly':H_Kelly[i],
-                     'DKelly':D_Kelly[i],
-                     'AKelly':A_Kelly[i]}  
-            Insert_DB(Value)
+            link_euro = []                                  
+            for game in games_temp:
+                link_euro.append(game[23])                                            # Game data 共有27個欄位, Link 在第24個
+            Company,H_Rate,D_Rate,A_Rate,H_WinRate,D_WinRate,A_WinRate,ReturnRate,H_Kelly,D_Kelly,A_Kelly = crawl_odds_kelly(link_euro)
+            print("Step2: Odds & Kelly data OK.")
+            
+            # 3) Insert to DB
+            for i in range(len(games_temp)):                                  
+                Value = {'Type':CheckType(u),
+                         'Datetime':datetime.strptime(games_temp[i][3],'%Y-%m-%d %H:%M'),
+                         'HomeTeam':games_temp[i][4],
+                         'AwayTeam':games_temp[i][5],
+                         'Score':games_temp[i][6],
+                         'Score_h':games_temp[i][7],
+                         'HomeRank':games_temp[i][8],
+                         'AwayRank':games_temp[i][9],             
+                         'Handicap_a':games_temp[i][10],
+                         'Handicap_h':games_temp[i][11],
+                         'Score_sum_a':games_temp[i][12],
+                         'Score_sum_h':games_temp[i][13],
+                         'EuroIndex':games_temp[i][15],
+                         'HomeRed':games_temp[i][18],
+                         'AwayRed':games_temp[i][19],
+                         'Unknown':games_temp[i][20],
+                         'EuroURL':games_temp[i][23],
+                         'GameRound':games_temp[i][24],
+                         'HomeName':games_temp[i][25],
+                         'AwayName':games_temp[i][26],
+                         # odds & kelly
+                         'Company':Company[i],
+                         'HRate':H_Rate[i],
+                         'DRate':D_Rate[i],
+                         'ARate':A_Rate[i],
+                         'HWinRate':H_WinRate[i],
+                         'DWinRate':D_WinRate[i],
+                         'AWinRate':A_WinRate[i],
+                         'ReturnRate':ReturnRate[i],
+                         'HKelly':H_Kelly[i],
+                         'DKelly':D_Kelly[i],
+                         'AKelly':A_Kelly[i]}  
+                Insert_DB(Value)
+                conn.commit()
+            print("Step3: Insert_DB OK.")
+            
+            # 4) Remove duplicates 
+            sql = "delete from soccer_matchrate_add where rowid not in (select * from (select max(rowid) \
+                   from soccer_matchrate_add group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,Score,HRate) as t)"
+            cursor.execute(sql)
             conn.commit()
-        print("Step3: Insert_DB OK.")
-        
-        # 4) Remove duplicates 
-        sql = "delete from soccer_matchrate_add where rowid not in (select * from (select max(rowid) \
-               from soccer_matchrate_add group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,Score,HRate) as t)"
-        cursor.execute(sql)
-        conn.commit()
-        print ("Step4: Remove duplicates OK.")
-        print("Execution time: ", datetime.now() - url_time)  
+            print ("Step4: Remove duplicates OK.")
+            print("Time of this round: ", datetime.now() - EachRound_time)
+            time.sleep(120)
         time.sleep(180)
     conn.close()
-    print("Finish crawled all urls.")
-
-
+    print("Time of OverAll: ", datetime.now() - OverAll_time)
+    print("All urls are done.")
 
