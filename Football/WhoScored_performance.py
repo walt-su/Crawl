@@ -28,13 +28,14 @@ if __name__ == "__main__":
 	chromeOptions = webdriver.ChromeOptions()
 	prefs = {'profile.managed_default_content_settings.images':2, 'disk-cache-size': 4096 }
 	chromeOptions.add_experimental_option("prefs", prefs)
-	web = webdriver.Chrome("E:\Walt\Python\chromedriver_win32\chromedriver", chrome_options=chromeOptions)
 
 	if (len(MR) != 0):
+		web = webdriver.Chrome("E:\Walt\Python\chromedriver_win32\chromedriver", chrome_options=chromeOptions)
+		a = datetime.datetime.now()        # To calculate execute time		
 		for i in range(len(MR)):
+			error_sum = 0
 			while True:
 				try:
-					a = datetime.datetime.now() # To calculate execute time
 					web.get(MR[i][1])
 					time.sleep(3)
 					# Match Center data
@@ -75,12 +76,16 @@ if __name__ == "__main__":
 					               'WL': score,	'FTR': FTR}
 					#print (Insert_data)
 					Insert_DB(Insert_data)
-					print ("Insert", "No."+str(i+1), ":", MR[i][1], MR[i][3] ," -> OK")
+					print ("Insert", "No."+str(i+1), ":", MR[i][1], MR[i][3], " -> OK")
 				except Exception as e:
-					print ("Insert", "No."+str(i+1), ":", MR[i][1], MR[i][3] ," -> Fail")
+					print ("Insert", "No."+str(i+1), ":", MR[i][1], MR[i][3], " -> Fail")
 					print ("Error11", e)
-					time.sleep(3)
-					pass
+					error_sum += 1
+					if error_sum > 3:
+						web.close()
+						web.quit()
+						web = webdriver.Chrome("E:\Walt\Python\chromedriver_win32\chromedriver", chrome_options=chromeOptions)
+						print("Re-open a window.")
 				else:
 					break
 		web.close()
