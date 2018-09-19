@@ -36,7 +36,7 @@ if __name__ == "__main__":
 				try:
 					a = datetime.datetime.now() # To calculate execute time
 					web.get(MR[i][1])
-
+					time.sleep(3)
 					# Match Center data
 					MC = [re.split(pattern='\n|-',string=j.text)[0:3] for j in web.find_elements_by_xpath('//*[@id="match-centre-stats"]/ul/li[1]')] +\
 						 [re.split(pattern='\n|-',string=j.text)[0:3] for j in web.find_elements_by_xpath('//li[@class="match-centre-stat  has-stats"]') if j.text != '']
@@ -76,7 +76,6 @@ if __name__ == "__main__":
 					#print (Insert_data)
 					Insert_DB(Insert_data)
 					print ("Insert", "No."+str(i+1), ":", MR[i][1], MR[i][3] ," -> OK")
-					time.sleep(3)
 				except Exception as e:
 					print ("Insert", "No."+str(i+1), ":", MR[i][1], MR[i][3] ," -> Fail")
 					print ("Error11", e)
