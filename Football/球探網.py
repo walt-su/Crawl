@@ -81,11 +81,13 @@ def crawl_game_data(url):
             Euro_url = "http://1x2.win007.com/oddslist/"+game_data[0]+".htm"  # 歐盤資料網址
             game_data.append(Euro_url.rstrip())                               # 記入歐盤資料網址, str.rstrip 是去掉空格
             game_data.append(week_round)                                      # 記入周別資料
-            game_data.append(team_name[game_data[4]][2].strip("'"))           # 取得主隊隊名(game_data[4]), [1] 是繁體
-            game_data.append(team_name[game_data[5]][2].strip("'"))           # 取得各隊隊名(game_data[5]), [1] 是繁體
+            game_data.append(team_name[game_data[4]][2].strip("'"))           # 取得主隊隊名(game_data[4]), [1] 是繁體, [2] 是英文
+            game_data.append(team_name[game_data[5]][2].strip("'"))           # 取得各隊隊名(game_data[5]), [1] 是繁體, [2] 是英文
             games.append(game_data)
-    #print(games)
-    return games
+    
+    games_return = [i for i in games if i[8] != ""]                           # 只留歷史記錄以及未來一周的比賽, i[8] 是主隊當周的名次
+    
+    return games_return
 
 ##### Odds & Kelly data
 def crawl_odds_kelly(Euro_url):
@@ -140,11 +142,11 @@ if __name__ == '__main__':
     cursor = conn.cursor()
     _date = datetime.now()
     version = str(_date.year) + str(format(_date.month, "02d")) + str(format(_date.day, "02d")) + str(format(_date.hour, "02d"))
-    url = ["http://zq.win007.com/jsData/matchResult/2015-2016/s36.js?version="+version
-          ,"http://zq.win007.com/jsData/matchResult/2015-2016/s31.js?version="+version
-          #"http://zq.win007.com/jsData/matchResult/2017-2018/s8.js?version=" +version
-          #"http://zq.win007.com/jsData/matchResult/2017-2018/s34.js?version="+version
-          #"http://zq.win007.com/jsData/matchResult/2017-2018/s11.js?version="+version
+    url = ["http://zq.win007.com/jsData/matchResult/2018-2019/s36.js?version="+version,
+           "http://zq.win007.com/jsData/matchResult/2018-2019/s31.js?version="+version
+           #"http://zq.win007.com/jsData/matchResult/2017-2018/s8.js?version=" +version
+           #"http://zq.win007.com/jsData/matchResult/2017-2018/s34.js?version="+version
+           #"http://zq.win007.com/jsData/matchResult/2017-2018/s11.js?version="+version
           ]
     OverAll_time = datetime.now()
     for u in url:
@@ -153,7 +155,9 @@ if __name__ == '__main__':
         print("Step1: Basic game data OK.")
     
         # 2) Get odds & kelly data
-        game_index = [[0, 70], [70, 140], [140, 210], [210, 290], [290, len(games)]]  # 設定抓取的賽次範圍, 避免被封鎖一次抓不完
+        #game_index = [[0, 70], [70, 140], [140, 210], [210, 290], [290, len(games)]]  # 設定抓取的賽次範圍, 避免被封鎖一次抓不完
+        #game_index = [[70, 140],[140, 210], [210, 290], [290, len(games)]]            # 設定抓取的賽次範圍, 避免被封鎖一次抓不完
+        game_index = [[0, len(games)]]
         for l in game_index:
             EachRound_time = datetime.now()
             games_temp = games[l[0]:l[1]]
@@ -161,12 +165,13 @@ if __name__ == '__main__':
 
             link_euro = []                                  
             for game in games_temp:
-                link_euro.append(game[23])                                            # Game data 共有27個欄位, Link 在第24個
+                link_euro.append(game[23])                                             # Game data 共有27個欄位, Link 在第24個, 2013-2014球季在第24個
             Company,H_Rate,D_Rate,A_Rate,H_WinRate,D_WinRate,A_WinRate,ReturnRate,H_Kelly,D_Kelly,A_Kelly = crawl_odds_kelly(link_euro)
             print("Step2: Odds & Kelly data OK.")
             
             # 3) Insert to DB
-            for i in range(len(games_temp)):                                  
+            for i in range(len(games_temp)): 
+                #print("Homename:", games_temp[i])                     
                 Value = {'Type':CheckType(u),
                          'Datetime':datetime.strptime(games_temp[i][3],'%Y-%m-%d %H:%M'),
                          'HomeTeam':games_temp[i][4],
@@ -183,10 +188,10 @@ if __name__ == '__main__':
                          'HomeRed':games_temp[i][18],
                          'AwayRed':games_temp[i][19],
                          'Unknown':games_temp[i][20],
-                         'EuroURL':games_temp[i][23],
-                         'GameRound':games_temp[i][24],
-                         'HomeName':games_temp[i][25],
-                         'AwayName':games_temp[i][26],
+                         'EuroURL':games_temp[i][23],                                  # 2013-2014球季在第24個
+                         'GameRound':games_temp[i][24],                                # 2013-2014球季在第25個
+                         'HomeName':games_temp[i][25],                                 # 2013-2014球季在第26個
+                         'AwayName':games_temp[i][26],                                 # 2013-2014球季在第27個
                          # odds & kelly
                          'Company':Company[i],
                          'HRate':H_Rate[i],
@@ -214,5 +219,5 @@ if __name__ == '__main__':
         time.sleep(180)
     conn.close()
     print("Time of OverAll: ", datetime.now() - OverAll_time)
-    print("All urls are done.")
+    print("All URLs are done.")
 
