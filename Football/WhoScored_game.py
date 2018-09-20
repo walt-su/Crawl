@@ -31,24 +31,32 @@ def GetMatchInfo(Url):
     #web.find_element_by_xpath('//*[@id="date-controller"]/a[1]/span').click()   
     while True:     
         try:
-            All_Link = web.find_elements_by_xpath('//*[@id="tournament-fixture"]//a[@class="result-1 rc"]') # 抓出每一分頁的Link。
-            if len(All_Link) == 0:
-                web.find_element_by_xpath('//*[@id="date-controller"]/a[1]/span').click()
+            #All_Link = web.find_elements_by_xpath('//*[@id="tournament-fixture"]//a[@class="result-1 rc"]')
+            All_Link_temp = web.find_elements_by_xpath('//*[@id="tournament-fixture"]//td[@class="result"]/a')  
+                                                                                                            # 抓出每一分頁的Link。
+            if len(All_Link_temp) == 0:                                                                     # 如果第一頁沒比賽, 就按下一頁
+                web.find_element_by_xpath('//*[@id="date-controller"]/a[1]/span').click()                   
                 time.sleep(3)
-                All_Link = web.find_elements_by_xpath('//*[@id="tournament-fixture"]//a[@class="result-1 rc"]')
+                All_Link_temp = web.find_elements_by_xpath('//*[@id="tournament-fixture"]//td[@class="result"]/a')
+              
+            All_Link = [i for i in All_Link_temp if i.get_attribute("class") != "result-4 rc"]              # 去掉還沒開打的比賽(result-4 rc)
             All_Link_Len = len(All_Link)                                                                    # 實際已比賽完的場數。
             Check_NO_Game = 0
 
             for i in All_Link:
                 Live = i.get_attribute("href").find("Live")
+                if Live == -1:
+                    Live = i.get_attribute("href").find("Show")                                             # 若是延賽，就用"Show"
                 DataCheck = i.get_attribute("href")[0:(Live+4)]                                             # 用來比對歷史資料。 "+4" 是要包含 "Live" 這四個字。
                 GetLink.append(DataCheck)                                                                   # 比對前先存放所有的URL。
                 if DataCheck in GetLink_old_data:                                                           # 若資料有在歷史資料中, 則Check_No_Game + 1, 以及把該筆 URL 放到 RemoveLink, 
                     Check_NO_Game += 1                                                                      # 等會用全部資料扣除這些重複的資料後, 再 insert 到 DB
                     RemoveLink.append(DataCheck)                                                            # 用來存放重複的 URL。
-            if  All_Link_Len == Check_NO_Game or Click_check > 8:                                           # 若該分頁所有的資料都已在DB, 則跳出程式結束。 若要從頭開始抓, 則設定 Click_check > 39:  
+            if  All_Link_Len == Check_NO_Game or Click_check > 6:                                           # 若該分頁所有的資料都已在DB, 則跳出程式結束。 若要從頭開始抓, 則設定 Click_check > 39:  
                 break
-            
+            for i in GetLink:
+                print(i)
+
             No_Game_Index = 0                                                                               # 抓取每一場比賽時間/主客隊/比分, 並合併成GetResult。
             for i in web.find_elements_by_xpath('//table[@id="tournament-fixture"]/tbody/tr'):
                 if re.search(' Post ',i.text) == None:                                                      # 如果有延期的, 將FT改成Post去分段

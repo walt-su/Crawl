@@ -19,8 +19,9 @@ if __name__ == "__main__":
 	conn = mysql.connect(user = "root", passwd = "1111", db = "soccer")
 	cursor = conn.cursor()
 
-	sql = 'select * from soccer_matchresult a where a.datetime >= (curdate()-INTERVAL 2000 DAY) and not exists (select url from soccer_teamperformance b where b.datetime >= (curdate()-INTERVAL 2000 DAY) and a.url=b.url)'
-	#這裡只爬matchresult有, 但performance裡沒有的URL。
+	sql = 'select * from soccer_matchresult a where a.datetime >= (curdate()-INTERVAL 2000 DAY) and a.HomeScore is not NULL and \
+	not exists (select url from soccer_teamperformance b where b.datetime >= (curdate()-INTERVAL 2000 DAY) and a.url=b.url)'
+	#這裡只爬matchresult有, 但performance裡沒有的URL, 且在matchresult裡的主隊分數都要有, 即沒有延賽。
 	cursor.execute(sql)
 	MR = list(cursor) # Match Result data
 	print("Total", len(MR), "data will be crawled:")
@@ -76,9 +77,9 @@ if __name__ == "__main__":
 					               'WL': score,	'FTR': FTR}
 					#print (Insert_data)
 					Insert_DB(Insert_data)
-					print ("Insert", "No."+str(i+1), ":", MR[i][1], MR[i][3], " -> OK")
+					print ("Insert", "No."+str(i+1), ":", MR[i][1], MR[i][3], MR[i][2], " -> OK")
 				except Exception as e:
-					print ("Insert", "No."+str(i+1), ":", MR[i][1], MR[i][3], " -> Fail")
+					print ("Insert", "No."+str(i+1), ":", MR[i][1], MR[i][3], MR[i][2], " -> Fail")
 					print ("Error11", e)
 					error_sum += 1
 					if error_sum > 3:
