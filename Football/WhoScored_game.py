@@ -33,16 +33,16 @@ def GetMatchInfo(Url):
         try:
             #All_Link = web.find_elements_by_xpath('//*[@id="tournament-fixture"]//a[@class="result-1 rc"]')
             All_Link_temp = web.find_elements_by_xpath('//*[@id="tournament-fixture"]//td[@class="result"]/a')  
-                                                                                                            # 抓出每一分頁的Link。
-            if len(All_Link_temp) == 0:                                                                     # 如果第一頁沒比賽, 就按下一頁
+            All_Link = [i for i in All_Link_temp if i.get_attribute("class") != "result-4 rc"]              # 第一次抓出每一分頁的Link。
+            if len(All_Link) == 0:                                                                          # 如果第一頁沒比賽, 就按下一頁, 並重新計算未開打比賽
                 web.find_element_by_xpath('//*[@id="date-controller"]/a[1]/span').click()                   
                 time.sleep(3)
                 All_Link_temp = web.find_elements_by_xpath('//*[@id="tournament-fixture"]//td[@class="result"]/a')
-              
-            All_Link = [i for i in All_Link_temp if i.get_attribute("class") != "result-4 rc"]              # 去掉還沒開打的比賽(result-4 rc)
+                All_Link = [i for i in All_Link_temp if i.get_attribute("class") != "result-4 rc"]          # 去掉還沒開打的比賽(result-4 rc)                
             All_Link_Len = len(All_Link)                                                                    # 實際已比賽完的場數。
-            Check_NO_Game = 0
 
+            # 針對Link做處理
+            Check_NO_Game = 0                                                                               # 用來確認該周DB已抓了幾場          
             for i in All_Link:
                 Live = i.get_attribute("href").find("Live")
                 if Live == -1:
@@ -56,7 +56,8 @@ def GetMatchInfo(Url):
                 break
             for i in GetLink:
                 print(i)
-
+            
+            # 開始抓資料
             No_Game_Index = 0                                                                               # 抓取每一場比賽時間/主客隊/比分, 並合併成GetResult。
             for i in web.find_elements_by_xpath('//table[@id="tournament-fixture"]/tbody/tr'):
                 if re.search(' Post ',i.text) == None:                                                      # 如果有延期的, 將FT改成Post去分段
@@ -118,7 +119,7 @@ if __name__ == "__main__":
     Url_Sea = ["https://www.whoscored.com/Regions/108/Tournaments/5/Italy-Serie-A"]
     Url_Lig = ["https://www.whoscored.com/Regions/74/Tournaments/22/France-Ligue-1"]
 
-    for Url in Url_Epl + Url_Lal + Url_Bun + Url_Sea + Url_Lig:
+    for Url in Url_Epl:# + Url_Lal + Url_Bun + Url_Sea + Url_Lig:
         print("Url:", GetType(Url))
         GameResults = GetMatchInfo(Url)
 
