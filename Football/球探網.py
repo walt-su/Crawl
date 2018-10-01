@@ -210,7 +210,7 @@ if __name__ == '__main__':
             
             # 4) Remove duplicates 
             sql = "delete from soccer_matchrate_add where rowid not in (select * from (select max(rowid) \
-                   from soccer_matchrate_add group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,Score,HRate) as t)"
+                   from soccer_matchrate_add group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,EuroURL) as t)"
             cursor.execute(sql)
             conn.commit()
             print ("Step4: Remove duplicates OK.")
