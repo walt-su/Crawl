@@ -97,6 +97,7 @@ if __name__ == "__main__":
 		print ("There is no new data in soccer_matchresult.")
 
 	sql = "delete from Soccer_TeamPerformance where rowid not in (select * from (select max(rowid) from Soccer_TeamPerformance group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,HOMESCORE,AWAYSCORE,H_RATINGS) as t)"
+	#sql = "delete from Soccer_TeamPerformance where rowid not in (select max(rowid) from Soccer_TeamPerformance group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,HOMESCORE,AWAYSCORE,H_RATINGS)"
 	cursor.execute(sql)
 
 	conn.commit()

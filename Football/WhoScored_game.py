@@ -119,7 +119,7 @@ if __name__ == "__main__":
     Url_Sea = ["https://www.whoscored.com/Regions/108/Tournaments/5/Italy-Serie-A"]
     Url_Lig = ["https://www.whoscored.com/Regions/74/Tournaments/22/France-Ligue-1"]
 
-    for Url in Url_Epl:# + Url_Lal + Url_Bun + Url_Sea + Url_Lig:
+    for Url in Url_Epl + Url_Lal + Url_Bun + Url_Sea + Url_Lig:
         print("Url:", GetType(Url))
         GameResults = GetMatchInfo(Url)
 
@@ -151,8 +151,11 @@ if __name__ == "__main__":
         else:
             print ('There is no new data in', GetType(Url))
        
-    sql = "delete from soccer_matchresult where rowid not in (select * from (select max(rowid) from \
-           soccer_matchresult group by URL,TYPE,DATETIME,HOMETEAM,HOMESCORE,AWAYSCORE,AWAYTEAM ) as t)"
+    #sql = "delete from soccer_matchresult where rowid not in (select * from (select max(rowid) from \
+    #       soccer_matchresult group by URL,TYPE,DATETIME,HOMETEAM,HOMESCORE,AWAYSCORE,AWAYTEAM ) as t)"
+    sql = "delete from soccer_matchresult where rowid not in (select max(rowid) from \
+           soccer_matchresult group by URL,TYPE,DATETIME,HOMETEAM,HOMESCORE,AWAYSCORE,AWAYTEAM )"
+    
     cursor.execute(sql)
     print("Remove duplicates OK.")
 

@@ -5,13 +5,26 @@ import requests
 import re
 from selenium import webdriver
 import MySQLdb as mariadb 
+import pyodbc
 
 ##### Insert DB
-def Insert_DB(InsertValue):
+def Insert_MySQL(InsertValue):
     placeholders = ', '.join(['%s'] * len(InsertValue))
     columns = ', '.join(InsertValue.keys())
     sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % ('soccer_matchrate_add', columns, placeholders)
     cursor.execute(sql,InsertValue.values())
+
+
+def Insert_MsSQL(InsertValue):
+    placeholders = ', '.join(['?'] * len(InsertValue))
+    columns = ', '.join(InsertValue.keys())
+    #sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % ('soccer_matchrate_add', columns, placeholders)
+    sql = "INSERT INTO soccer_matchrate_add ( Type, Datetime, HomeTeam, AwayTeam, Score, Score_h, HomeRank, AwayRank, Handicap_a, Handicap_h, Score_sum_a, Score_sum_h, EuroIndex, HomeRed, AwayRed, Unknown, EuroURL, GameRound, HomeName, AwayName, Company, HRate, DRate, ARate, HWinRate, DWinRate, AWinRate, ReturnRate, HKelly, DKelly, AKelly )\
+     VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )"
+    a = InsertValue
+    cursor.execute(sql,a["Type"], a["Datetime"],a["HomeTeam"],a["AwayTeam"],a["Score"],a["Score_h"],a["HomeRank"],a["AwayRank"],a["Handicap_a"],a["Handicap_h"],a["Score_sum_a"],a["Score_sum_h"],a["EuroIndex"],\
+        a["HomeRed"],a["AwayRed"],a["Unknown"],a["EuroURL"],a["GameRound"],a["HomeName"],a["AwayName"],a["Company"],a["HRate"],a["DRate"],a["ARate"],a["HWinRate"],a["DWinRate"],a["AWinRate"],a["ReturnRate"],\
+        a["HKelly"],a["DKelly"],a["AKelly"])
 
 ##### Check type
 def CheckType(url):
@@ -108,17 +121,17 @@ def crawl_odds_kelly(Euro_url):
             web.find_element_by_xpath('//*[@id="sel_showType"]/option[2]').click()        #指定初盤
             time.sleep(4)
             Temp = re.split(' ',web.find_element_by_xpath('//tr[@id="oddstr_281"]').text) # Bet365 id 代碼是 oddstr_281
-            Company.append((Temp[0]+Temp[1][0:3]).encode('utf-8')) 
-            H_Rate.append(Temp[2].encode('utf-8'))
-            D_Rate.append(Temp[3].encode('utf-8'))
-            A_Rate.append(Temp[4].encode('utf-8'))
-            H_WinRate.append(Temp[5].encode('utf-8'))
-            D_WinRate.append(Temp[6].encode('utf-8'))
-            A_WinRate.append(Temp[7].encode('utf-8'))
-            ReturnRate.append(Temp[8].encode('utf-8'))
-            H_Kelly.append(Temp[9].encode('utf-8'))
-            D_Kelly.append(Temp[10].encode('utf-8'))
-            A_Kelly.append(Temp[11].encode('utf-8'))
+            Company.append((Temp[0]+Temp[1][0:3])) 
+            H_Rate.append(Temp[2])
+            D_Rate.append(Temp[3])
+            A_Rate.append(Temp[4])
+            H_WinRate.append(Temp[5])
+            D_WinRate.append(Temp[6])
+            A_WinRate.append(Temp[7])
+            ReturnRate.append(Temp[8])
+            H_Kelly.append(Temp[9])
+            D_Kelly.append(Temp[10])
+            A_Kelly.append(Temp[11])
         except:
             Company.append("")
             H_Rate.append("")
@@ -137,12 +150,20 @@ def crawl_odds_kelly(Euro_url):
 
 
 if __name__ == '__main__': 
+    
+    #conn = mariadb.connect(user="root", passwd="1111", db="soccer", charset="utf8")                                                  # for MySQL
+    #cursor = conn.cursor()
 
-    conn = mariadb.connect(user="root", passwd="1111", db="soccer", charset="utf8")
+    _server = "tcp:sqlservertest123456.database.windows.net"
+    _database = "Soccer"
+    _uid = "kevin"
+    _pwd = "qwert@WSX"
+    conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+_server+';DATABASE='+_database+';UID='+_uid+';PWD='+_pwd)  # for MSSQL
     cursor = conn.cursor()
+    
     _date = datetime.now()
     version = str(_date.year) + str(format(_date.month, "02d")) + str(format(_date.day, "02d")) + str(format(_date.hour, "02d"))
-    url = ["http://zq.win007.com/jsData/matchResult/2018-2019/s36.js?version="+version,
+    url = [#"http://zq.win007.com/jsData/matchResult/2018-2019/s36.js?version="+version,
            "http://zq.win007.com/jsData/matchResult/2018-2019/s31.js?version="+version
            #"http://zq.win007.com/jsData/matchResult/2017-2018/s8.js?version=" +version
            #"http://zq.win007.com/jsData/matchResult/2017-2018/s34.js?version="+version
@@ -204,13 +225,16 @@ if __name__ == '__main__':
                          'HKelly':H_Kelly[i],
                          'DKelly':D_Kelly[i],
                          'AKelly':A_Kelly[i]}  
-                Insert_DB(Value)
+                #Insert_MySQL(Value)
+                Insert_MsSQL(Value)
                 conn.commit()
             print("Step3: Insert_DB OK.")
             
             # 4) Remove duplicates 
-            sql = "delete from soccer_matchrate_add where rowid not in (select * from (select max(rowid) \
-                   from soccer_matchrate_add group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,EuroURL) as t)"
+            #sql = "delete from soccer_matchrate_add where rowid not in (select * from (select max(rowid) \     # for MySQL
+            #       from soccer_matchrate_add group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,EuroURL) as t)"          
+            sql = "delete from soccer_matchrate_add where rowid not in (select max(rowid) \
+                   from soccer_matchrate_add group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,EuroURL)"                  # for MsSQL
             cursor.execute(sql)
             conn.commit()
             print ("Step4: Remove duplicates OK.")
