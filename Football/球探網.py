@@ -12,19 +12,17 @@ def Insert_MySQL(InsertValue):
     placeholders = ', '.join(['%s'] * len(InsertValue))
     columns = ', '.join(InsertValue.keys())
     sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % ('soccer_matchrate_add', columns, placeholders)
-    cursor.execute(sql,InsertValue.values())
+    print(sql)
+    cursor_mYsql.execute(sql,InsertValue.values())
+    conn_mYsql.commit()
 
 
 def Insert_MsSQL(InsertValue):
     placeholders = ', '.join(['?'] * len(InsertValue))
     columns = ', '.join(InsertValue.keys())
-    #sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % ('soccer_matchrate_add', columns, placeholders)
-    sql = "INSERT INTO soccer_matchrate_add ( Type, Datetime, HomeTeam, AwayTeam, Score, Score_h, HomeRank, AwayRank, Handicap_a, Handicap_h, Score_sum_a, Score_sum_h, EuroIndex, HomeRed, AwayRed, Unknown, EuroURL, GameRound, HomeName, AwayName, Company, HRate, DRate, ARate, HWinRate, DWinRate, AWinRate, ReturnRate, HKelly, DKelly, AKelly )\
-     VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )"
-    a = InsertValue
-    cursor.execute(sql,a["Type"], a["Datetime"],a["HomeTeam"],a["AwayTeam"],a["Score"],a["Score_h"],a["HomeRank"],a["AwayRank"],a["Handicap_a"],a["Handicap_h"],a["Score_sum_a"],a["Score_sum_h"],a["EuroIndex"],\
-        a["HomeRed"],a["AwayRed"],a["Unknown"],a["EuroURL"],a["GameRound"],a["HomeName"],a["AwayName"],a["Company"],a["HRate"],a["DRate"],a["ARate"],a["HWinRate"],a["DWinRate"],a["AWinRate"],a["ReturnRate"],\
-        a["HKelly"],a["DKelly"],a["AKelly"])
+    sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % ('soccer_matchrate_add', columns, placeholders)
+    cursor_MSsql.execute(sql,list(InsertValue.values()))
+    conn_MSsql.commit()
 
 ##### Check type
 def CheckType(url):
@@ -151,19 +149,19 @@ def crawl_odds_kelly(Euro_url):
 
 if __name__ == '__main__': 
     
-    #conn = mariadb.connect(user="root", passwd="1111", db="soccer", charset="utf8")                                                  # for MySQL
-    #cursor = conn.cursor()
+    conn_mYsql = mariadb.connect(user="root", passwd="1111", db="soccer", charset="utf8")                                                  # for MySQL
+    cursor_mYsql = conn_mYsql.cursor()
 
     _server = "tcp:sqlservertest123456.database.windows.net"
     _database = "Soccer"
     _uid = "kevin"
     _pwd = "qwert@WSX"
-    conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+_server+';DATABASE='+_database+';UID='+_uid+';PWD='+_pwd)  # for MSSQL
-    cursor = conn.cursor()
+    conn_MSsql = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+_server+';DATABASE='+_database+';UID='+_uid+';PWD='+_pwd)  # for MSSQL
+    cursor_MSsql = conn_MSsql.cursor()
     
     _date = datetime.now()
     version = str(_date.year) + str(format(_date.month, "02d")) + str(format(_date.day, "02d")) + str(format(_date.hour, "02d"))
-    url = [#"http://zq.win007.com/jsData/matchResult/2018-2019/s36.js?version="+version,
+    url = ["http://zq.win007.com/jsData/matchResult/2018-2019/s36.js?version="+version,
            "http://zq.win007.com/jsData/matchResult/2018-2019/s31.js?version="+version
            #"http://zq.win007.com/jsData/matchResult/2017-2018/s8.js?version=" +version
            #"http://zq.win007.com/jsData/matchResult/2017-2018/s34.js?version="+version
@@ -191,8 +189,7 @@ if __name__ == '__main__':
             print("Step2: Odds & Kelly data OK.")
             
             # 3) Insert to DB
-            for i in range(len(games_temp)): 
-                #print("Homename:", games_temp[i])                     
+            for i in range(len(games_temp)):                  
                 Value = {'Type':CheckType(u),
                          'Datetime':datetime.strptime(games_temp[i][3],'%Y-%m-%d %H:%M'),
                          'HomeTeam':games_temp[i][4],
@@ -225,23 +222,28 @@ if __name__ == '__main__':
                          'HKelly':H_Kelly[i],
                          'DKelly':D_Kelly[i],
                          'AKelly':A_Kelly[i]}  
-                #Insert_MySQL(Value)
+                Insert_MySQL(Value)
                 Insert_MsSQL(Value)
-                conn.commit()
             print("Step3: Insert_DB OK.")
             
             # 4) Remove duplicates 
-            #sql = "delete from soccer_matchrate_add where rowid not in (select * from (select max(rowid) \     # for MySQL
-            #       from soccer_matchrate_add group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,EuroURL) as t)"          
-            sql = "delete from soccer_matchrate_add where rowid not in (select max(rowid) \
-                   from soccer_matchrate_add group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,EuroURL)"                  # for MsSQL
-            cursor.execute(sql)
-            conn.commit()
+            sql_mYsql = "delete from soccer_matchrate_add where rowid not in (select * from (select max(rowid)\
+                         from soccer_matchrate_add group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,EuroURL) as t)"            # for MySQL
+            cursor_mYsql.execute(sql_mYsql)
+            conn_mYsql.commit()
+
+            sql_MSsql = "delete from soccer_matchrate_add where rowid not in (select max(rowid)\
+                         from soccer_matchrate_add group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,EuroURL)"                  # for MsSQL
+            cursor_MSsql.execute(sql_MSsql)
+            conn_MSsql.commit()            
+
             print ("Step4: Remove duplicates OK.")
             print("Time of this round: ", datetime.now() - EachRound_time)
             time.sleep(120)
         time.sleep(180)
-    conn.close()
+    conn_mYsql.close()
+    conn_MSsql.close()
+
     print("Time of OverAll: ", datetime.now() - OverAll_time)
     print("All URLs are done.")
 
