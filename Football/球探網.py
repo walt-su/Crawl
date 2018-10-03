@@ -14,15 +14,12 @@ def Insert_MySQL(InsertValue):
     sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % ('soccer_matchrate_add', columns, placeholders)
     print(sql)
     cursor_mYsql.execute(sql,InsertValue.values())
-    conn_mYsql.commit()
-
 
 def Insert_MsSQL(InsertValue):
     placeholders = ', '.join(['?'] * len(InsertValue))
     columns = ', '.join(InsertValue.keys())
     sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % ('soccer_matchrate_add', columns, placeholders)
     cursor_MSsql.execute(sql,list(InsertValue.values()))
-    conn_MSsql.commit()
 
 ##### Check type
 def CheckType(url):
@@ -223,7 +220,9 @@ if __name__ == '__main__':
                          'DKelly':D_Kelly[i],
                          'AKelly':A_Kelly[i]}  
                 Insert_MySQL(Value)
+                conn_mYsql.commit()
                 Insert_MsSQL(Value)
+                conn_MSsql.commit()
             print("Step3: Insert_DB OK.")
             
             # 4) Remove duplicates 
