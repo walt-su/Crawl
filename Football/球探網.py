@@ -12,7 +12,6 @@ def Insert_MySQL(InsertValue):
     placeholders = ', '.join(['%s'] * len(InsertValue))
     columns = ', '.join(InsertValue.keys())
     sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % ('soccer_matchrate_add', columns, placeholders)
-    print(sql)
     cursor_mYsql.execute(sql,InsertValue.values())
 
 def Insert_MsSQL(InsertValue):
@@ -104,20 +103,40 @@ def crawl_odds_kelly(Euro_url):
     chromeOptions.add_experimental_option("prefs", prefs)
     web = webdriver.Chrome("E:\Walt\Python\chromedriver_win32\chromedriver", chrome_options=chromeOptions)
     Company = []
-    H_Rate = []; D_Rate = []; A_Rate = []                                     #賠率
-    H_WinRate = []; D_WinRate = []; A_WinRate = []                            #勝率
-    ReturnRate = []                                                           #返還率
-    H_Kelly = []; D_Kelly = []; A_Kelly = []                                  #Kelly index   
-    
+    H_Rate     = []; D_Rate    = []; A_Rate    = []                           # 賠率 365
+    H_WinRate  = []; D_WinRate = []; A_WinRate = []                           # 勝率 365
+    ReturnRate = [];                                                          # 返還率 365
+
+    H_Rate_pin     = []; D_Rate_pin    = []; A_Rate_pin    = []               # for pinnacle
+    H_WinRate_pin  = []; D_WinRate_pin = []; A_WinRate_pin = []
+    ReturnRate_pin = [];
+
+    H_Rate_fair     = []; D_Rate_fair    = []; A_Rate_fair    = []            # for Betfair
+    H_WinRate_fair  = []; D_WinRate_fair = []; A_WinRate_fair = []
+    ReturnRate_fair = [];
+
+    H_Rate_hill     = []; D_Rate_hill    = []; A_Rate_hill    = []            # for William Hill
+    H_WinRate_hill  = []; D_WinRate_hill = []; A_WinRate_hill = []
+    ReturnRate_hill = [];
+
+    H_Rate_high = []; D_Rate_high = []; A_Rate_high = []                      # for overall
+    H_Rate_low  = []; D_Rate_low  = []; A_Rate_low  = []
+    H_Rate_mean = []; D_Rate_mean = []; A_Rate_mean = []
+    H_WinRate_high = []; D_WinRate_high = []; A_WinRate_high = []    
+    H_WinRate_low  = []; D_WinRate_low  = []; A_WinRate_low  = []
+    H_WinRate_mean = []; D_WinRate_mean = []; A_WinRate_mean = []
+
+    H_Kelly = []; D_Kelly = []; A_Kelly = []                                  # Kelly index    
+
     for i in Euro_url:  
-        try :
-            web.get(i)
-            time.sleep(4)
-            web.find_element_by_xpath('//*[@id="sel_showType"]/option[2]').click()        #指定初盤
-            time.sleep(4)
-            Temp = re.split(' ',web.find_element_by_xpath('//tr[@id="oddstr_281"]').text) # Bet365 id 代碼是 oddstr_281
+        web.get(i)
+        time.sleep(4)
+        web.find_element_by_xpath('//*[@id="sel_showType"]/option[2]').click()                 #指定初盤
+        time.sleep(4)
+        try:            # for 365
+            Temp = re.split(' ',web.find_element_by_xpath('//tr[@id="oddstr_281"]').text)      # Bet365 id 代碼是 oddstr_281
             Company.append((Temp[0]+Temp[1][0:3])) 
-            H_Rate.append(Temp[2])
+            H_Rate.append(Temp[2]);
             D_Rate.append(Temp[3])
             A_Rate.append(Temp[4])
             H_WinRate.append(Temp[5])
@@ -128,40 +147,137 @@ def crawl_odds_kelly(Euro_url):
             D_Kelly.append(Temp[10])
             A_Kelly.append(Temp[11])
         except:
-            Company.append("")
-            H_Rate.append("")
-            D_Rate.append("")
-            A_Rate.append("")
-            H_WinRate.append("")
-            D_WinRate.append("")
-            A_WinRate.append("")
-            ReturnRate.append("")
-            H_Kelly.append("")
-            D_Kelly.append("")
-            A_Kelly.append("")
+            Company.append(None)
+            H_Rate.append(None)
+            D_Rate.append(None)
+            A_Rate.append(None)
+            H_WinRate.append(None)
+            D_WinRate.append(None)
+            A_WinRate.append(None)
+            ReturnRate.append(None)
+            H_Kelly.append(None)
+            D_Kelly.append(None)
+            A_Kelly.append(None)
+        try:            # for Pin
+            Temp_pin  = re.split(' ',web.find_element_by_xpath('//tr[@id="oddstr_177"]').text) # Pinnacle id 代碼是 oddstr_177
+            H_Rate_pin.append(Temp_pin[1])
+            D_Rate_pin.append(Temp_pin[2])
+            A_Rate_pin.append(Temp_pin[3])
+            H_WinRate_pin.append(Temp_pin[4])
+            D_WinRate_pin.append(Temp_pin[5])
+            A_WinRate_pin.append(Temp_pin[6])
+            ReturnRate_pin.append(Temp_pin[7])
+        except:
+            H_Rate_pin.append(None)
+            D_Rate_pin.append(None)
+            A_Rate_pin.append(None)
+            H_WinRate_pin.append(None)
+            D_WinRate_pin.append(None)
+            A_WinRate_pin.append(None)
+            ReturnRate_pin.append(None)
+        try:       # for fair
+            Temp_fair = re.split(' ',web.find_element_by_xpath('//tr[@id="oddstr_2"]').text)   # Betfair id 代碼是 oddstr_2
+            H_Rate_fair.append(Temp_fair[1])
+            D_Rate_fair.append(Temp_fair[2])
+            A_Rate_fair.append(Temp_fair[3])
+            H_WinRate_fair.append(Temp_fair[4])
+            D_WinRate_fair.append(Temp_fair[5])
+            A_WinRate_fair.append(Temp_fair[6])
+            ReturnRate_fair.append(Temp_fair[7])
+        except:
+            H_Rate_fair.append(None)
+            D_Rate_fair.append(None)
+            A_Rate_fair.append(None)
+            H_WinRate_fair.append(None)
+            D_WinRate_fair.append(None)
+            A_WinRate_fair.append(None)
+            ReturnRate_fair.append(None)
+        try:       # for hill
+            Temp_hill = re.split(' ',web.find_element_by_xpath('//tr[@id="oddstr_115"]').text) # WilliamHill id 代碼是 oddstr_115
+            H_Rate_hill.append(Temp_hill[1])
+            D_Rate_hill.append(Temp_hill[2])
+            A_Rate_hill.append(Temp_hill[3])
+            H_WinRate_hill.append(Temp_hill[4])
+            D_WinRate_hill.append(Temp_hill[5])
+            A_WinRate_hill.append(Temp_hill[6])
+            ReturnRate_hill.append(Temp_hill[7])
+        except:
+            H_Rate_hill.append(None)
+            D_Rate_hill.append(None)
+            A_Rate_hill.append(None)
+            H_WinRate_hill.append(None)
+            D_WinRate_hill.append(None)
+            A_WinRate_hill.append(None)
+            ReturnRate_hill.append(None)
+        try:    # for overall
+            Temp_high = re.split(' ',web.find_element_by_xpath('//tr[@id="highFObj"]').text) 
+            Temp_low  = re.split(' ',web.find_element_by_xpath('//tr[@id="lowFObj"]').text)  
+            Temp_mean = re.split(' ',web.find_element_by_xpath('//tr[@id="avgFObj"]').text)  
+            H_Rate_high.append(Temp_high[2])
+            D_Rate_high.append(Temp_high[3])
+            A_Rate_high.append(Temp_high[4])
+            H_WinRate_high.append(Temp_high[5])
+            D_WinRate_high.append(Temp_high[6])
+            A_WinRate_high.append(Temp_high[7])
+            H_Rate_low.append(Temp_low[1])
+            D_Rate_low.append(Temp_low[2])
+            A_Rate_low.append(Temp_low[3])
+            H_WinRate_low.append(Temp_low[4])
+            D_WinRate_low.append(Temp_low[5])
+            A_WinRate_low.append(Temp_low[6])
+            H_Rate_mean.append(Temp_mean[1])
+            D_Rate_mean.append(Temp_mean[2])
+            A_Rate_mean.append(Temp_mean[3])            
+            H_WinRate_mean.append(Temp_mean[4])
+            D_WinRate_mean.append(Temp_mean[5])
+            A_WinRate_mean.append(Temp_mean[6])
+        except:
+            H_Rate_high.append(None)
+            D_Rate_high.append(None)
+            A_Rate_high.append(None)
+            H_WinRate_high.append(None)
+            D_WinRate_high.append(None)
+            A_WinRate_high.append(None)
+            H_Rate_low.append(None)
+            D_Rate_low.append(None)
+            A_Rate_low.append(None)
+            H_WinRate_low.append(None)
+            D_WinRate_low.append(None)
+            A_WinRate_low.append(None)
+            H_Rate_mean.append(None)
+            D_Rate_mean.append(None)
+            A_Rate_mean.append(None)
+            H_WinRate_mean.append(None)
+            D_WinRate_mean.append(None)
+            A_WinRate_mean.append(None)
     web.close()
     web.quit()
-    return Company,H_Rate,D_Rate,A_Rate,H_WinRate,D_WinRate,A_WinRate,ReturnRate,H_Kelly,D_Kelly,A_Kelly
-
+    return  Company,H_Rate,D_Rate,A_Rate,H_WinRate,D_WinRate,A_WinRate,ReturnRate,H_Kelly,D_Kelly,A_Kelly\
+            ,H_Rate_pin, D_Rate_pin, A_Rate_pin, H_WinRate_pin, D_WinRate_pin, A_WinRate_pin, ReturnRate_pin\
+            ,H_Rate_fair,D_Rate_fair,A_Rate_fair,H_WinRate_fair,D_WinRate_fair,A_WinRate_fair,ReturnRate_fair\
+            ,H_Rate_hill,D_Rate_hill,A_Rate_hill,H_WinRate_hill,D_WinRate_hill,A_WinRate_hill,ReturnRate_hill\
+            ,H_Rate_high,D_Rate_high,A_Rate_high,H_WinRate_high,D_WinRate_high,A_WinRate_high\
+            ,H_Rate_low, D_Rate_low, A_Rate_low, H_WinRate_low, D_WinRate_low, A_WinRate_low\
+            ,H_Rate_mean,D_Rate_mean,A_Rate_mean,H_WinRate_mean,D_WinRate_mean,A_WinRate_mean           # 50 features
 
 if __name__ == '__main__': 
     
-    conn_mYsql = mariadb.connect(user="root", passwd="1111", db="soccer", charset="utf8")                                                  # for MySQL
+    conn_mYsql = mariadb.connect(user="root", passwd="1111", db="soccer", charset="utf8")                                                   # for MySQL
     cursor_mYsql = conn_mYsql.cursor()
 
     _server = "tcp:sqlservertest123456.database.windows.net"
     _database = "Soccer"
     _uid = "kevin"
     _pwd = "qwert@WSX"
-    conn_MSsql = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+_server+';DATABASE='+_database+';UID='+_uid+';PWD='+_pwd)  # for MSSQL
-    cursor_MSsql = conn_MSsql.cursor()
+    #conn_MSsql = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+_server+';DATABASE='+_database+';UID='+_uid+';PWD='+_pwd)  # for MSSQL
+    #cursor_MSsql = conn_MSsql.cursor()
     
     _date = datetime.now()
     version = str(_date.year) + str(format(_date.month, "02d")) + str(format(_date.day, "02d")) + str(format(_date.hour, "02d"))
-    url = ["http://zq.win007.com/jsData/matchResult/2018-2019/s36.js?version="+version,
-           "http://zq.win007.com/jsData/matchResult/2018-2019/s31.js?version="+version
-           #"http://zq.win007.com/jsData/matchResult/2017-2018/s8.js?version=" +version
-           #"http://zq.win007.com/jsData/matchResult/2017-2018/s34.js?version="+version
+    url = [#"http://zq.win007.com/jsData/matchResult/2018-2019/s36.js?version="+version
+           "http://zq.win007.com/jsData/matchResult/2015-2016/s31.js?version="+version
+           #"http://zq.win007.com/jsData/matchResult/2017-2018/s8.js?version=" +version,
+           #"http://zq.win007.com/jsData/matchResult/2017-2018/s34.js?version="+version,
            #"http://zq.win007.com/jsData/matchResult/2017-2018/s11.js?version="+version
           ]
     OverAll_time = datetime.now()
@@ -171,9 +287,9 @@ if __name__ == '__main__':
         print("Step1: Basic game data OK.")
     
         # 2) Get odds & kelly data
-        #game_index = [[0, 70], [70, 140], [140, 210], [210, 290], [290, len(games)]]  # 設定抓取的賽次範圍, 避免被封鎖一次抓不完
-        #game_index = [[70, 140],[140, 210], [210, 290], [290, len(games)]]            # 設定抓取的賽次範圍, 避免被封鎖一次抓不完
-        game_index = [[0, len(games)]]
+        game_index = [[0, 70], [70, 140], [140, 210], [210, 290], [290, len(games)]]   # 設定抓取的賽次範圍, 避免被封鎖一次抓不完
+        #game_index = [[70, 140],[140, 210], [210, 290], [290, len(games)]]             # 設定抓取的賽次範圍, 避免被封鎖一次抓不完
+        #game_index = [[0, 70]]
         for l in game_index:
             EachRound_time = datetime.now()
             games_temp = games[l[0]:l[1]]
@@ -181,8 +297,14 @@ if __name__ == '__main__':
 
             link_euro = []                                  
             for game in games_temp:
-                link_euro.append(game[23])                                             # Game data 共有27個欄位, Link 在第24個, 2013-2014球季在第24個
-            Company,H_Rate,D_Rate,A_Rate,H_WinRate,D_WinRate,A_WinRate,ReturnRate,H_Kelly,D_Kelly,A_Kelly = crawl_odds_kelly(link_euro)
+                link_euro.append(game[23])                                              # Game data 共有38個欄位, Link 在game[23], 2013-2014球季在game[21]
+            Company,H_Rate,D_Rate,A_Rate,H_WinRate,D_WinRate,A_WinRate,ReturnRate,H_Kelly,D_Kelly,A_Kelly\
+            ,H_Rate_pin, D_Rate_pin, A_Rate_pin, H_WinRate_pin, D_WinRate_pin, A_WinRate_pin, ReturnRate_pin\
+            ,H_Rate_fair,D_Rate_fair,A_Rate_fair,H_WinRate_fair,D_WinRate_fair,A_WinRate_fair,ReturnRate_fair\
+            ,H_Rate_hill,D_Rate_hill,A_Rate_hill,H_WinRate_hill,D_WinRate_hill,A_WinRate_hill,ReturnRate_hill\
+            ,H_Rate_high,D_Rate_high,A_Rate_high,H_WinRate_high,D_WinRate_high,A_WinRate_high\
+            ,H_Rate_low, D_Rate_low, A_Rate_low, H_WinRate_low, D_WinRate_low, A_WinRate_low\
+            ,H_Rate_mean,D_Rate_mean,A_Rate_mean,H_WinRate_mean,D_WinRate_mean,A_WinRate_mean = crawl_odds_kelly(link_euro)
             print("Step2: Odds & Kelly data OK.")
             
             # 3) Insert to DB
@@ -203,10 +325,10 @@ if __name__ == '__main__':
                          'HomeRed':games_temp[i][18],
                          'AwayRed':games_temp[i][19],
                          'Unknown':games_temp[i][20],
-                         'EuroURL':games_temp[i][23],                                  # 2013-2014球季在第24個
-                         'GameRound':games_temp[i][24],                                # 2013-2014球季在第25個
-                         'HomeName':games_temp[i][25],                                 # 2013-2014球季在第26個
-                         'AwayName':games_temp[i][26],                                 # 2013-2014球季在第27個
+                         'EuroURL':games_temp[i][23],                                  # 2013-2014球季在game[21], others is game[23]
+                         'GameRound':games_temp[i][24],                                # 2013-2014球季在game[22], others is game[24]
+                         'HomeName':games_temp[i][25],                                 # 2013-2014球季在game[23], others is game[25]
+                         'AwayName':games_temp[i][26],                                 # 2013-2014球季在game[24], others is game[26]
                          # odds & kelly
                          'Company':Company[i],
                          'HRate':H_Rate[i],
@@ -218,11 +340,51 @@ if __name__ == '__main__':
                          'ReturnRate':ReturnRate[i],
                          'HKelly':H_Kelly[i],
                          'DKelly':D_Kelly[i],
-                         'AKelly':A_Kelly[i]}  
+                         'AKelly':A_Kelly[i],
+                         'HRate_pin':H_Rate_pin[i],
+                         'DRate_pin':D_Rate_pin[i],
+                         'ARate_pin':A_Rate_pin[i],
+                         'HWinRate_pin':H_WinRate_pin[i],
+                         'DWinRate_pin':D_WinRate_pin[i],
+                         'AWinRate_pin':A_WinRate_pin[i],
+                         'ReturnRate_pin':ReturnRate_pin[i],
+                         'HRate_fair':H_Rate_fair[i],
+                         'DRate_fair':D_Rate_fair[i],
+                         'ARate_fair':A_Rate_fair[i],
+                         'HWinRate_fair':H_WinRate_fair[i],
+                         'DWinRate_fair':D_WinRate_fair[i],
+                         'AWinRate_fair':A_WinRate_fair[i],
+                         'ReturnRate_fair':ReturnRate_fair[i],
+                         'HRate_hill':H_Rate_hill[i],
+                         'DRate_hill':D_Rate_hill[i],
+                         'ARate_hill':A_Rate_hill[i],
+                         'HWinRate_hill':H_WinRate_hill[i],
+                         'DWinRate_hill':D_WinRate_hill[i],
+                         'AWinRate_hill':A_WinRate_hill[i],
+                         'ReturnRate_hill':ReturnRate_hill[i],
+                         'HRate_high':H_Rate_high[i],
+                         'DRate_high':D_Rate_high[i],
+                         'ARate_high':A_Rate_high[i],
+                         'HRate_low':H_Rate_low[i],
+                         'DRate_low':D_Rate_low[i],
+                         'ARate_low':A_Rate_low[i],
+                         'HRate_mean':H_Rate_mean[i],
+                         'DRate_mean':D_Rate_mean[i],
+                         'ARate_mean':A_Rate_mean[i],
+                         'HWinRate_high':H_WinRate_high[i],
+                         'DWinRate_high':D_WinRate_high[i],
+                         'AWinRate_high':A_WinRate_high[i],
+                         'HWinRate_low':H_WinRate_low[i],
+                         'DWinRate_low':D_WinRate_low[i],
+                         'AWinRate_low':A_WinRate_low[i],
+                         'HWinRate_mean':H_WinRate_mean[i],
+                         'DWinRate_mean':D_WinRate_mean[i],
+                         'AWinRate_mean':A_WinRate_mean[i]}  
+                print(Value)
                 Insert_MySQL(Value)
                 conn_mYsql.commit()
-                Insert_MsSQL(Value)
-                conn_MSsql.commit()
+                #Insert_MsSQL(Value)
+                #conn_MSsql.commit()
             print("Step3: Insert_DB OK.")
             
             # 4) Remove duplicates 
@@ -233,15 +395,15 @@ if __name__ == '__main__':
 
             sql_MSsql = "delete from soccer_matchrate_add where rowid not in (select max(rowid)\
                          from soccer_matchrate_add group by TYPE,DATETIME,HOMETEAM,AWAYTEAM,EuroURL)"                  # for MsSQL
-            cursor_MSsql.execute(sql_MSsql)
-            conn_MSsql.commit()            
+            #cursor_MSsql.execute(sql_MSsql)
+            #conn_MSsql.commit()            
 
             print ("Step4: Remove duplicates OK.")
             print("Time of this round: ", datetime.now() - EachRound_time)
             time.sleep(120)
         time.sleep(180)
     conn_mYsql.close()
-    conn_MSsql.close()
+    #conn_MSsql.close()
 
     print("Time of OverAll: ", datetime.now() - OverAll_time)
     print("All URLs are done.")
