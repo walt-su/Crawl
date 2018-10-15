@@ -4,7 +4,7 @@ from selenium.webdriver.common.by import By
 import time
 import MySQLdb as mariadb
 
-conn =  mariadb.connect(user='root',passwd='',db='NEWS',charset="utf8")
+conn =  mariadb.connect(user='',passwd='',db='',charset="utf8")
 cursor = conn.cursor()
 
 Link_All = []

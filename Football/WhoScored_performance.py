@@ -16,7 +16,7 @@ def Insert_DB(InsertValue):
 
 if __name__ == "__main__":
 
-	conn = mysql.connect(user = "root", passwd = "1111", db = "soccer")
+	conn = mysql.connect(user = "", passwd = "", db = "")
 	cursor = conn.cursor()
 
 	sql = 'select * from soccer_matchresult a where a.datetime >= (curdate()-INTERVAL 2000 DAY) and a.HomeScore is not NULL and \

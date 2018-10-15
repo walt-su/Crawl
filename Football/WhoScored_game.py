@@ -110,7 +110,7 @@ def GetType(Url):
 
 if __name__ == "__main__":
 
-    conn =  mariadb.connect(user='root',passwd='1111',db='soccer')
+    conn =  mariadb.connect(user='',passwd='',db='')
     cursor = conn.cursor()
 
     Url_Epl = ["https://www.whoscored.com/Regions/252/Tournaments/2/Seasons/7361/England-Premier-League"]

@@ -8,11 +8,10 @@ import datetime
 import time
 import sys
 
-#conn = mariadb.connect(user="root", passwd="1111", db="mlb", charset="utf8")
-#cursor = conn.cursor()
+conn = mariadb.connect(user="", passwd="", db="", charset="utf8")
+cursor = conn.cursor()
 
 
-print(sys.version)
 def InsertDB(InsertValue):
 	placeholder = ",".join(["%s"] * len(InsertValue))
 	columns = ",".join(InsertValue.keys())
@@ -78,31 +77,6 @@ if __name__=='__main__':
 			#	print("URLError")
 
 			time.sleep(1)
-
-
-
-
-
-#file = urllib.request.urlopen('https://blog.csdn.net/fengxinlinux/article/details/77281253')
-#data = file.read()
-#data_str = data.decode("utf-8")
-#print(data_str)
-'''
-url = 'https://www.foxsports.com.tw/baseball/mlb/%E8%B3%BD%E7%A8%8B/'
-header = {
-	"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36"
-	}
-request=urllib.request.Request(url, headers=header)
-data = ur.urlopen(request).read()
-
-#print(response.decode("utf-8"))
-
-
-
-fhandle = open("./1.html", "wb")
-fhandle.write(data)
-fhandle.close()
-'''
 
 
 

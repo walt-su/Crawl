@@ -7,7 +7,7 @@ import datetime
 import MySQLdb as mariadb 
 import time
 
-conn = mariadb.connect(user="root", passwd="1111", db="nba", charset="utf8")
+conn = mariadb.connect(user="", passwd="", db="", charset="utf8")
 cursor = conn.cursor()
 
 def UpdateDB(InsertValue):

@@ -262,7 +262,7 @@ def crawl_odds_kelly(Euro_url):
 
 if __name__ == '__main__': 
     
-    conn_mYsql = mariadb.connect(user="root", passwd="1111", db="soccer", charset="utf8")                                                   # for MySQL
+    conn_mYsql = mariadb.connect(user="", passwd="", db="", charset="utf8")                                                   # for MySQL
     cursor_mYsql = conn_mYsql.cursor()
 
     _server = "tcp:sqlservertest123456.database.windows.net"
