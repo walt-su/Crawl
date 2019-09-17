@@ -4,8 +4,8 @@ import time
 import requests
 import re
 from selenium import webdriver
-import pyodbc
 import MySQLdb as mariadb 
+import pyodbc
 
 
 
