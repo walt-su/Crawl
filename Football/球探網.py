@@ -4,8 +4,10 @@ import time
 import requests
 import re
 from selenium import webdriver
-import MySQLdb as mariadb 
 import pyodbc
+import MySQLdb as mariadb 
+
+
 
 ##### Insert DB
 def Insert_MySQL(InsertValue):
