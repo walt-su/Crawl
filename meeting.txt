@@ -1,0 +1,14 @@
+Tasks in next year:
+
+1. DB backup bi-weekly (all)
+2. second sport (all)
+3. DB study & survey, (hbase, mongo, crassdry)
+4. API research (Bill)
+5. website construction, chatroom (demo version) (Bill)
+6. website research, especially for 美工 (Dash)
+7. graph application, focus on gambling (Dash)
+8. competitor survey, focus on tw, china (Dash)
+9. 走地盤 study (Wei, Dash)
+10. Risk estimation & arbitragy strategy (Walt)
+11. sports related - 
+12. non sports related - 
