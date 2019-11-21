@@ -1,0 +1,5 @@
+Tasks in next year:
+
+1. DB backup bi-weekly (all)
+2. second sport (all)
+3. DB study & survey, (hbase, mongo, crassdry)
